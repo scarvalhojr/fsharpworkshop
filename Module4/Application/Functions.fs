@@ -2,6 +2,9 @@
 
 open Types
 open System
+open FSharp.Data
+
+type Json = JsonProvider<"Data.json">
 
 let tryPromoteToVip purchases =
     let customer, amount = purchases
@@ -9,8 +12,12 @@ let tryPromoteToVip purchases =
     else customer
 
 let getPurchases customer =
-    if customer.Id % 2 = 0 then (customer, 120M)
-    else (customer, 80M)
+    let purchases =
+        Json.Load "Data.Json"
+        |> Seq.filter (fun c -> c.CustomerId = customer.Id)
+        |> Seq.collect (fun c -> c.PurchasesByMonth)
+        |> Seq.average
+    (customer, purchases)
 
 let increaseCredit condition customer =
     if condition customer then { customer with Credit = customer.Credit + 100M<USD> }
